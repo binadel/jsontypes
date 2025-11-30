@@ -1,0 +1,2 @@
+# jsontypes
+JSON types.
