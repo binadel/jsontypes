@@ -5,7 +5,7 @@ import (
 	"github.com/mailru/easyjson/jwriter"
 )
 
-// Boolean represents an optional JSON field of type boolean.
+// String represents an optional JSON field of type string.
 //
 // It models three distinct states:
 //   - field not present in the JSON:     Present = false, Valid = false
@@ -14,7 +14,7 @@ import (
 //
 // This is useful when you need to know whether a field existed in the input,
 // not just whether its value is null.
-type Boolean struct {
+type String struct {
 	// Present is true if the JSON field exists, even if the value is null.
 	Present bool
 
@@ -22,7 +22,7 @@ type Boolean struct {
 	Valid bool
 
 	// Value holds the underlying value when both Present and Valid are true.
-	Value bool
+	Value string
 }
 
 // IsDefined reports whether the field was present in the input JSON,
@@ -30,13 +30,13 @@ type Boolean struct {
 //
 // It is used by easyjson to determine whether the field should be marshaled
 // when using the `omitempty` tag.
-func (v Boolean) IsDefined() bool {
+func (v String) IsDefined() bool {
 	return v.Present
 }
 
 // Get returns the contained value if the field is present and non-null.
 // Otherwise, it returns the supplied fallback value.
-func (v Boolean) Get(value bool) bool {
+func (v String) Get(value string) string {
 	if v.Present && v.Valid {
 		return v.Value
 	} else {
@@ -45,28 +45,28 @@ func (v Boolean) Get(value bool) bool {
 }
 
 // Set assigns a non-null value and marks the field as present.
-func (v *Boolean) Set(value bool) {
+func (v *String) Set(value string) {
 	v.Present = true
 	v.Valid = true
 	v.Value = value
 }
 
 // MarshalEasyJSON implements easyjson.Marshaler.
-func (v Boolean) MarshalEasyJSON(w *jwriter.Writer) {
+func (v String) MarshalEasyJSON(w *jwriter.Writer) {
 	if v.Valid {
-		w.Bool(v.Value)
+		w.String(v.Value)
 	} else {
 		w.RawString("null")
 	}
 }
 
 // UnmarshalEasyJSON implements easyjson.Unmarshaler.
-func (v *Boolean) UnmarshalEasyJSON(l *jlexer.Lexer) {
+func (v *String) UnmarshalEasyJSON(l *jlexer.Lexer) {
 	v.Present = true
 	if l.IsNull() {
 		l.Skip()
 	} else {
 		v.Valid = true
-		v.Value = l.Bool()
+		v.Value = l.String()
 	}
 }
