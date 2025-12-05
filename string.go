@@ -30,13 +30,13 @@ type String struct {
 //
 // It is used by easyjson to determine whether the field should be marshaled
 // when using the `omitempty` tag.
-func (v String) IsDefined() bool {
+func (v *String) IsDefined() bool {
 	return v.Present
 }
 
 // Get returns the contained value if the field is present and non-null.
 // Otherwise, it returns the supplied fallback value.
-func (v String) Get(value string) string {
+func (v *String) Get(value string) string {
 	if v.Present && v.Valid {
 		return v.Value
 	} else {
@@ -52,7 +52,7 @@ func (v *String) Set(value string) {
 }
 
 // MarshalEasyJSON implements easyjson.Marshaler.
-func (v String) MarshalEasyJSON(w *jwriter.Writer) {
+func (v *String) MarshalEasyJSON(w *jwriter.Writer) {
 	if v.Valid {
 		w.String(v.Value)
 	} else {

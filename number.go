@@ -36,6 +36,8 @@ const (
 // This is useful when you need to know whether a field existed in the input,
 // not just whether its value is null.
 type Number struct {
+	kind numberKind
+
 	// Present is true if the JSON field exists, even if the value is null.
 	Present bool
 
@@ -45,9 +47,9 @@ type Number struct {
 	// Value holds the underlying value when both Present and Valid are true.
 	Value json.Number
 
-	kind    numberKind
-	integer int64
-	float   float64
+	signed   int64
+	unsigned uint64
+	float    float64
 }
 
 // IsDefined reports whether the field was present in the input JSON,
@@ -55,14 +57,14 @@ type Number struct {
 //
 // It is used by easyjson to determine whether the field should be marshaled
 // when using the `omitempty` tag.
-func (v Number) IsDefined() bool {
+func (v *Number) IsDefined() bool {
 	return v.Present
 }
 
 // Get returns the contained value if the field is present and non-null.
 // Otherwise, it returns the supplied fallback value.
-func (v Number) Get(value json.Number) json.Number {
-	if v.Present && v.Valid {
+func (v *Number) Get(value json.Number) json.Number {
+	if v.Present && v.Valid && len(v.Value) > 0 {
 		return v.Value
 	} else {
 		return value
@@ -78,31 +80,31 @@ func (v *Number) Set(value json.Number) {
 }
 
 // MarshalEasyJSON implements easyjson.Marshaler.
-func (v Number) MarshalEasyJSON(w *jwriter.Writer) {
+func (v *Number) MarshalEasyJSON(w *jwriter.Writer) {
 	if v.Valid {
 		switch v.kind {
 		case kindString:
 			w.RawString(string(v.Value))
 		case kindInt:
-			w.Int(int(v.integer))
+			w.Int(int(v.signed))
 		case kindInt8:
-			w.Int8(int8(v.integer))
+			w.Int8(int8(v.signed))
 		case kindInt16:
-			w.Int16(int16(v.integer))
+			w.Int16(int16(v.signed))
 		case kindInt32:
-			w.Int32(int32(v.integer))
+			w.Int32(int32(v.signed))
 		case kindInt64:
-			w.Int64(v.integer)
+			w.Int64(v.signed)
 		case kindUInt:
-			w.Uint(uint(v.integer))
+			w.Uint(uint(v.unsigned))
 		case kindUInt8:
-			w.Uint8(uint8(v.integer))
+			w.Uint8(uint8(v.unsigned))
 		case kindUInt16:
-			w.Uint16(uint16(v.integer))
+			w.Uint16(uint16(v.unsigned))
 		case kindUInt32:
-			w.Uint32(uint32(v.integer))
+			w.Uint32(uint32(v.unsigned))
 		case kindUInt64:
-			w.Uint64(uint64(v.integer))
+			w.Uint64(v.unsigned)
 		case kindFloat32:
 			w.Float32(float32(v.float))
 		case kindFloat64:
@@ -124,142 +126,229 @@ func (v *Number) UnmarshalEasyJSON(l *jlexer.Lexer) {
 	}
 }
 
-// Int parses the underlying number value to an int type.
-func (v Number) Int() (int, error) {
-	n, err := strconv.ParseInt(string(v.Value), 10, strconv.IntSize)
-	return int(n), err
+// Int parses the underlying number value to an int.
+func (v *Number) Int() (int, error) {
+	if v.kind != kindInt {
+		var err error
+		if v.signed, err = strconv.ParseInt(string(v.Value), 10, strconv.IntSize); err == nil {
+			v.kind = kindInt
+		} else {
+			return 0, err
+		}
+	}
+	return int(v.signed), nil
 }
 
-// Int8 parses the underlying number value to an int8 type.
-func (v Number) Int8() (int8, error) {
-	n, err := strconv.ParseInt(string(v.Value), 10, 8)
-	return int8(n), err
+// Int8 parses the underlying number value to an int8.
+func (v *Number) Int8() (int8, error) {
+	if v.kind != kindInt8 {
+		var err error
+		if v.signed, err = strconv.ParseInt(string(v.Value), 10, 8); err == nil {
+			v.kind = kindInt8
+		} else {
+			return 0, err
+		}
+	}
+	return int8(v.signed), nil
 }
 
-// Int16 parses the underlying number value to an int16 type.
-func (v Number) Int16() (int16, error) {
-	n, err := strconv.ParseInt(string(v.Value), 10, 16)
-	return int16(n), err
+// Int16 parses the underlying number value to an int16.
+func (v *Number) Int16() (int16, error) {
+	if v.kind != kindInt16 {
+		var err error
+		if v.signed, err = strconv.ParseInt(string(v.Value), 10, 16); err == nil {
+			v.kind = kindInt16
+		} else {
+			return 0, err
+		}
+	}
+	return int16(v.signed), nil
 }
 
-// Int32 parses the underlying number value to an int32 type.
-func (v Number) Int32() (int32, error) {
-	n, err := strconv.ParseInt(string(v.Value), 10, 32)
-	return int32(n), err
+// Int32 parses the underlying number value to an int32.
+func (v *Number) Int32() (int32, error) {
+	if v.kind != kindInt32 {
+		var err error
+		if v.signed, err = strconv.ParseInt(string(v.Value), 10, 32); err == nil {
+			v.kind = kindInt32
+		} else {
+			return 0, err
+		}
+	}
+	return int32(v.signed), nil
 }
 
-// Int64 parses the underlying number value to an int64 type.
-func (v Number) Int64() (int64, error) {
-	return strconv.ParseInt(string(v.Value), 10, 64)
+// Int64 parses the underlying number value to an int64.
+func (v *Number) Int64() (int64, error) {
+	if v.kind != kindInt64 {
+		var err error
+		if v.signed, err = strconv.ParseInt(string(v.Value), 10, 64); err == nil {
+			v.kind = kindInt64
+		} else {
+			return 0, err
+		}
+	}
+	return v.signed, nil
 }
 
-// UInt parses the underlying number value to an uint type.
-func (v Number) UInt() (uint, error) {
-	n, err := strconv.ParseUint(string(v.Value), 10, strconv.IntSize)
-	return uint(n), err
+// UInt parses the underlying number value to an uint.
+func (v *Number) UInt() (uint, error) {
+	if v.kind != kindUInt {
+		var err error
+		if v.unsigned, err = strconv.ParseUint(string(v.Value), 10, strconv.IntSize); err == nil {
+			v.kind = kindUInt
+		} else {
+			return 0, err
+		}
+	}
+	return uint(v.unsigned), nil
 }
 
-// UInt8 parses the underlying number value to an uint8 type.
-func (v Number) UInt8() (uint8, error) {
-	n, err := strconv.ParseUint(string(v.Value), 10, 8)
-	return uint8(n), err
+// UInt8 parses the underlying number value to an uint8.
+func (v *Number) UInt8() (uint8, error) {
+	if v.kind != kindUInt8 {
+		var err error
+		if v.unsigned, err = strconv.ParseUint(string(v.Value), 10, 8); err == nil {
+			v.kind = kindUInt8
+		} else {
+			return 0, err
+		}
+	}
+	return uint8(v.unsigned), nil
 }
 
-// UInt16 parses the underlying number value to an uint16 type.
-func (v Number) UInt16() (uint16, error) {
-	n, err := strconv.ParseUint(string(v.Value), 10, 16)
-	return uint16(n), err
+// UInt16 parses the underlying number value to an uint16.
+func (v *Number) UInt16() (uint16, error) {
+	if v.kind != kindUInt16 {
+		var err error
+		if v.unsigned, err = strconv.ParseUint(string(v.Value), 10, 16); err == nil {
+			v.kind = kindUInt16
+		} else {
+			return 0, err
+		}
+	}
+	return uint16(v.unsigned), nil
 }
 
-// UInt32 parses the underlying number value to an uint32 type.
-func (v Number) UInt32() (uint32, error) {
-	n, err := strconv.ParseUint(string(v.Value), 10, 32)
-	return uint32(n), err
+// UInt32 parses the underlying number value to an uint32.
+func (v *Number) UInt32() (uint32, error) {
+	if v.kind != kindUInt32 {
+		var err error
+		if v.unsigned, err = strconv.ParseUint(string(v.Value), 10, 32); err == nil {
+			v.kind = kindUInt32
+		} else {
+			return 0, err
+		}
+	}
+	return uint32(v.unsigned), nil
 }
 
-// UInt64 parses the underlying number value to an uint64 type.
-func (v Number) UInt64() (uint64, error) {
-	return strconv.ParseUint(string(v.Value), 10, 64)
+// UInt64 parses the underlying number value to an uint64.
+func (v *Number) UInt64() (uint64, error) {
+	if v.kind != kindUInt64 {
+		var err error
+		if v.unsigned, err = strconv.ParseUint(string(v.Value), 10, 64); err == nil {
+			v.kind = kindUInt64
+		} else {
+			return 0, err
+		}
+	}
+	return v.unsigned, nil
 }
 
-// Float32 parses the underlying number value to a float32 type.
-func (v Number) Float32() (float32, error) {
-	n, err := strconv.ParseFloat(string(v.Value), 32)
-	return float32(n), err
+// Float32 parses the underlying number value to a float32.
+func (v *Number) Float32() (float32, error) {
+	if v.kind != kindFloat32 {
+		var err error
+		if v.float, err = strconv.ParseFloat(string(v.Value), 32); err == nil {
+			v.kind = kindFloat32
+		} else {
+			return 0, err
+		}
+	}
+	return float32(v.float), nil
 }
 
-// Float64 parses the underlying number value to a float64 type.
-func (v Number) Float64() (float64, error) {
-	return strconv.ParseFloat(string(v.Value), 64)
+// Float64 parses the underlying number value to a float64.
+func (v *Number) Float64() (float64, error) {
+	if v.kind != kindFloat64 {
+		var err error
+		if v.float, err = strconv.ParseFloat(string(v.Value), 64); err == nil {
+			v.kind = kindFloat64
+		} else {
+			return 0, err
+		}
+	}
+	return v.float, nil
 }
 
-// SetInt formats the number value from an int type.
+// SetInt assigns an int as the underlying number value.
 func (v *Number) SetInt(value int) {
 	v.kind = kindInt
-	v.integer = int64(value)
+	v.signed = int64(value)
 }
 
-// SetInt8 formats the number value from an int8 type.
+// SetInt8 assigns an int8 as the underlying number value.
 func (v *Number) SetInt8(value int8) {
 	v.kind = kindInt8
-	v.integer = int64(value)
+	v.signed = int64(value)
 }
 
-// SetInt16 formats the number value from an int16 type.
+// SetInt16 assigns an int16 as the underlying number value.
 func (v *Number) SetInt16(value int16) {
 	v.kind = kindInt16
-	v.integer = int64(value)
+	v.signed = int64(value)
 }
 
-// SetInt32 formats the number value from an int32 type.
+// SetInt32 assigns an int32 as the underlying number value.
 func (v *Number) SetInt32(value int32) {
 	v.kind = kindInt32
-	v.integer = int64(value)
+	v.signed = int64(value)
 }
 
-// SetInt64 formats the number value from an int64 type.
+// SetInt64 assigns an int64 as the underlying number value.
 func (v *Number) SetInt64(value int64) {
 	v.kind = kindInt64
-	v.integer = value
+	v.signed = value
 }
 
-// SetUInt formats the number value from an uint type.
+// SetUInt assigns an uint as the underlying number value.
 func (v *Number) SetUInt(value uint) {
 	v.kind = kindUInt
-	v.integer = int64(value)
+	v.unsigned = uint64(value)
 }
 
-// SetUInt8 formats the number value from an uint8 type.
+// SetUInt8 assigns an uint8 as the underlying number value.
 func (v *Number) SetUInt8(value uint8) {
 	v.kind = kindUInt8
-	v.integer = int64(value)
+	v.unsigned = uint64(value)
 }
 
-// SetUInt16 formats the number value from an uint16 type.
+// SetUInt16 assigns an uint16 as the underlying number value.
 func (v *Number) SetUInt16(value uint16) {
 	v.kind = kindUInt16
-	v.integer = int64(value)
+	v.unsigned = uint64(value)
 }
 
-// SetUInt32 formats the number value from an uint32 type.
+// SetUInt32 assigns an uint32 as the underlying number value.
 func (v *Number) SetUInt32(value uint32) {
 	v.kind = kindUInt32
-	v.integer = int64(value)
+	v.unsigned = uint64(value)
 }
 
-// SetUInt64 formats the number value from an uint64 type.
+// SetUInt64 assigns an uint64 as the underlying number value.
 func (v *Number) SetUInt64(value uint64) {
 	v.kind = kindUInt64
-	v.integer = int64(value)
+	v.unsigned = value
 }
 
-// SetFloat32 formats the number value from a float32 type.
+// SetFloat32 assigns a float32 as the underlying number value.
 func (v *Number) SetFloat32(value float32) {
 	v.kind = kindFloat32
 	v.float = float64(value)
 }
 
-// SetFloat64 formats the number value from a float64 type.
+// SetFloat64 assigns a float64 as the underlying number value.
 func (v *Number) SetFloat64(value float64) {
 	v.kind = kindFloat64
 	v.float = value
