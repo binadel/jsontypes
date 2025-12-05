@@ -11,7 +11,8 @@ import (
 type numberKind byte
 
 const (
-	kindInt = numberKind(iota)
+	kindString = numberKind(iota)
+	kindInt
 	kindInt8
 	kindInt16
 	kindInt32
@@ -73,12 +74,40 @@ func (v *Number) Set(value json.Number) {
 	v.Present = true
 	v.Valid = true
 	v.Value = value
+	v.kind = kindString
 }
 
 // MarshalEasyJSON implements easyjson.Marshaler.
 func (v Number) MarshalEasyJSON(w *jwriter.Writer) {
 	if v.Valid {
-		w.RawString(string(v.Value))
+		switch v.kind {
+		case kindString:
+			w.RawString(string(v.Value))
+		case kindInt:
+			w.Int(int(v.integer))
+		case kindInt8:
+			w.Int8(int8(v.integer))
+		case kindInt16:
+			w.Int16(int16(v.integer))
+		case kindInt32:
+			w.Int32(int32(v.integer))
+		case kindInt64:
+			w.Int64(v.integer)
+		case kindUInt:
+			w.Uint(uint(v.integer))
+		case kindUInt8:
+			w.Uint8(uint8(v.integer))
+		case kindUInt16:
+			w.Uint16(uint16(v.integer))
+		case kindUInt32:
+			w.Uint32(uint32(v.integer))
+		case kindUInt64:
+			w.Uint64(uint64(v.integer))
+		case kindFloat32:
+			w.Float32(float32(v.float))
+		case kindFloat64:
+			w.Float64(v.float)
+		}
 	} else {
 		w.RawString("null")
 	}
