@@ -109,6 +109,8 @@ func (v *Number) MarshalEasyJSON(w *jwriter.Writer) {
 			w.Float32(float32(v.float))
 		case kindFloat64:
 			w.Float64(v.float)
+		default:
+			panic("cannot marshal unknown number kind")
 		}
 	} else {
 		w.RawString("null")
@@ -126,8 +128,8 @@ func (v *Number) UnmarshalEasyJSON(l *jlexer.Lexer) {
 	}
 }
 
-// Int parses the underlying number value to an int.
-func (v *Number) Int() (int, error) {
+// ParseInt parses the underlying number value to an int.
+func (v *Number) ParseInt() (int, error) {
 	if v.kind != kindInt {
 		var err error
 		if v.signed, err = strconv.ParseInt(string(v.Value), 10, strconv.IntSize); err == nil {
@@ -139,8 +141,18 @@ func (v *Number) Int() (int, error) {
 	return int(v.signed), nil
 }
 
-// Int8 parses the underlying number value to an int8.
-func (v *Number) Int8() (int8, error) {
+// Int returns the number as an int.
+// Returns zero in case of parse error.
+func (v *Number) Int() int {
+	if v.kind != kindInt {
+		value, _ := v.ParseInt()
+		return value
+	}
+	return int(v.signed)
+}
+
+// ParseInt8 parses the underlying number value to an int8.
+func (v *Number) ParseInt8() (int8, error) {
 	if v.kind != kindInt8 {
 		var err error
 		if v.signed, err = strconv.ParseInt(string(v.Value), 10, 8); err == nil {
@@ -152,8 +164,18 @@ func (v *Number) Int8() (int8, error) {
 	return int8(v.signed), nil
 }
 
-// Int16 parses the underlying number value to an int16.
-func (v *Number) Int16() (int16, error) {
+// Int8 returns the number as an int8.
+// Returns zero in case of parse error.
+func (v *Number) Int8() int8 {
+	if v.kind != kindInt8 {
+		value, _ := v.ParseInt8()
+		return value
+	}
+	return int8(v.signed)
+}
+
+// ParseInt16 parses the underlying number value to an int16.
+func (v *Number) ParseInt16() (int16, error) {
 	if v.kind != kindInt16 {
 		var err error
 		if v.signed, err = strconv.ParseInt(string(v.Value), 10, 16); err == nil {
@@ -165,8 +187,18 @@ func (v *Number) Int16() (int16, error) {
 	return int16(v.signed), nil
 }
 
-// Int32 parses the underlying number value to an int32.
-func (v *Number) Int32() (int32, error) {
+// Int16 returns the number as an int16.
+// Returns zero in case of parse error.
+func (v *Number) Int16() int16 {
+	if v.kind != kindInt16 {
+		value, _ := v.ParseInt16()
+		return value
+	}
+	return int16(v.signed)
+}
+
+// ParseInt32 parses the underlying number value to an int32.
+func (v *Number) ParseInt32() (int32, error) {
 	if v.kind != kindInt32 {
 		var err error
 		if v.signed, err = strconv.ParseInt(string(v.Value), 10, 32); err == nil {
@@ -178,8 +210,18 @@ func (v *Number) Int32() (int32, error) {
 	return int32(v.signed), nil
 }
 
-// Int64 parses the underlying number value to an int64.
-func (v *Number) Int64() (int64, error) {
+// Int32 returns the number as an int32.
+// Returns zero in case of parse error.
+func (v *Number) Int32() int32 {
+	if v.kind != kindInt32 {
+		value, _ := v.ParseInt32()
+		return value
+	}
+	return int32(v.signed)
+}
+
+// ParseInt64 parses the underlying number value to an int64.
+func (v *Number) ParseInt64() (int64, error) {
 	if v.kind != kindInt64 {
 		var err error
 		if v.signed, err = strconv.ParseInt(string(v.Value), 10, 64); err == nil {
@@ -191,8 +233,18 @@ func (v *Number) Int64() (int64, error) {
 	return v.signed, nil
 }
 
-// UInt parses the underlying number value to an uint.
-func (v *Number) UInt() (uint, error) {
+// Int64 returns the number as an int64.
+// Returns zero in case of parse error.
+func (v *Number) Int64() int64 {
+	if v.kind != kindInt64 {
+		value, _ := v.ParseInt64()
+		return value
+	}
+	return v.signed
+}
+
+// ParseUInt parses the underlying number value to an uint.
+func (v *Number) ParseUInt() (uint, error) {
 	if v.kind != kindUInt {
 		var err error
 		if v.unsigned, err = strconv.ParseUint(string(v.Value), 10, strconv.IntSize); err == nil {
@@ -204,8 +256,18 @@ func (v *Number) UInt() (uint, error) {
 	return uint(v.unsigned), nil
 }
 
-// UInt8 parses the underlying number value to an uint8.
-func (v *Number) UInt8() (uint8, error) {
+// UInt returns the number as an uint.
+// Returns zero in case of parse error.
+func (v *Number) UInt() uint {
+	if v.kind != kindUInt {
+		value, _ := v.ParseUInt()
+		return value
+	}
+	return uint(v.unsigned)
+}
+
+// ParseUInt8 parses the underlying number value to an uint8.
+func (v *Number) ParseUInt8() (uint8, error) {
 	if v.kind != kindUInt8 {
 		var err error
 		if v.unsigned, err = strconv.ParseUint(string(v.Value), 10, 8); err == nil {
@@ -217,8 +279,18 @@ func (v *Number) UInt8() (uint8, error) {
 	return uint8(v.unsigned), nil
 }
 
-// UInt16 parses the underlying number value to an uint16.
-func (v *Number) UInt16() (uint16, error) {
+// UInt8 returns the number as an uint8.
+// Returns zero in case of parse error.
+func (v *Number) UInt8() uint8 {
+	if v.kind != kindUInt8 {
+		value, _ := v.ParseUInt8()
+		return value
+	}
+	return uint8(v.unsigned)
+}
+
+// ParseUInt16 parses the underlying number value to an uint16.
+func (v *Number) ParseUInt16() (uint16, error) {
 	if v.kind != kindUInt16 {
 		var err error
 		if v.unsigned, err = strconv.ParseUint(string(v.Value), 10, 16); err == nil {
@@ -230,8 +302,18 @@ func (v *Number) UInt16() (uint16, error) {
 	return uint16(v.unsigned), nil
 }
 
-// UInt32 parses the underlying number value to an uint32.
-func (v *Number) UInt32() (uint32, error) {
+// UInt16 returns the number as an uint16.
+// Returns zero in case of parse error.
+func (v *Number) UInt16() uint16 {
+	if v.kind != kindUInt16 {
+		value, _ := v.ParseUInt16()
+		return value
+	}
+	return uint16(v.unsigned)
+}
+
+// ParseUInt32 parses the underlying number value to an uint32.
+func (v *Number) ParseUInt32() (uint32, error) {
 	if v.kind != kindUInt32 {
 		var err error
 		if v.unsigned, err = strconv.ParseUint(string(v.Value), 10, 32); err == nil {
@@ -243,8 +325,18 @@ func (v *Number) UInt32() (uint32, error) {
 	return uint32(v.unsigned), nil
 }
 
-// UInt64 parses the underlying number value to an uint64.
-func (v *Number) UInt64() (uint64, error) {
+// UInt32 returns the number as an uint32.
+// Returns zero in case of parse error.
+func (v *Number) UInt32() uint32 {
+	if v.kind != kindUInt32 {
+		value, _ := v.ParseUInt32()
+		return value
+	}
+	return uint32(v.unsigned)
+}
+
+// ParseUInt64 parses the underlying number value to an uint64.
+func (v *Number) ParseUInt64() (uint64, error) {
 	if v.kind != kindUInt64 {
 		var err error
 		if v.unsigned, err = strconv.ParseUint(string(v.Value), 10, 64); err == nil {
@@ -256,8 +348,18 @@ func (v *Number) UInt64() (uint64, error) {
 	return v.unsigned, nil
 }
 
-// Float32 parses the underlying number value to a float32.
-func (v *Number) Float32() (float32, error) {
+// UInt64 returns the number as an uint64.
+// Returns zero in case of parse error.
+func (v *Number) UInt64() uint64 {
+	if v.kind != kindUInt64 {
+		value, _ := v.ParseUInt64()
+		return value
+	}
+	return v.unsigned
+}
+
+// ParseFloat32 parses the underlying number value to a float32.
+func (v *Number) ParseFloat32() (float32, error) {
 	if v.kind != kindFloat32 {
 		var err error
 		if v.float, err = strconv.ParseFloat(string(v.Value), 32); err == nil {
@@ -269,8 +371,18 @@ func (v *Number) Float32() (float32, error) {
 	return float32(v.float), nil
 }
 
-// Float64 parses the underlying number value to a float64.
-func (v *Number) Float64() (float64, error) {
+// Float32 returns the number as a float32.
+// Returns zero in case of parse error.
+func (v *Number) Float32() float32 {
+	if v.kind != kindFloat32 {
+		value, _ := v.ParseFloat32()
+		return value
+	}
+	return float32(v.float)
+}
+
+// ParseFloat64 parses the underlying number value to a float64.
+func (v *Number) ParseFloat64() (float64, error) {
 	if v.kind != kindFloat64 {
 		var err error
 		if v.float, err = strconv.ParseFloat(string(v.Value), 64); err == nil {
@@ -280,6 +392,16 @@ func (v *Number) Float64() (float64, error) {
 		}
 	}
 	return v.float, nil
+}
+
+// Float64 returns the number as a float64.
+// Returns zero in case of parse error.
+func (v *Number) Float64() float64 {
+	if v.kind != kindFloat64 {
+		value, _ := v.ParseFloat64()
+		return value
+	}
+	return v.float
 }
 
 // SetInt assigns an int as the underlying number value.
